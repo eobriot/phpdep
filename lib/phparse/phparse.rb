@@ -27,6 +27,11 @@ class Phparse::Phparser < Parslet::Parser
   rule :space_or_eol do
     space.maybe | space.maybe >> eol.maybe
   end
+
+  rule :end_stmt do
+    space >> str(";") >> space_or_eol
+  end
+
   # Grammaire
    rule(:program) do
     statement.repeat >> space_or_eol.maybe
@@ -111,7 +116,7 @@ class Phparse::Phparser < Parslet::Parser
   
  #Expression...Le pire.
   rule :expr do
-    assignement.as(:assignement) | cast.as(:cast)  | space >> variable.as(:variable) >> space >> str(";").maybe
+    assignement.as(:assignement) | cast.as(:cast)  | unary_op.as(:unary_op) | space >> variable.as(:variable) >> space >> str(";").maybe
   end
 
   rule :assignement do
@@ -120,6 +125,15 @@ class Phparse::Phparser < Parslet::Parser
 
   rule :cast do
     space >> str('(') >> space >> match('\w').repeat.as(:cast_type) >> space >> str(')') >> space >> expr.as(:castee)
+  end
+
+  rule :unary_op do
+    unary_token.as(:op) >> space >> expr.as(:operand) >> end_stmt
+# | space >> expr.as(:operand) >> space >> unary_token.as(:op)
+  end
+
+  rule :unary_token do
+    str("!") | str("~") | str("++") | str("--") | str("-")
   end
 
 end
